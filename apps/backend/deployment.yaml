@@ -42,6 +42,8 @@ spec:
               valueFrom: { secretKeyRef: { name: gotgan-backend-oidc, key: web-bff-secret } }
             - name: WEB_REDIRECT_URI
               value: https://app.gotgan.live/login/oauth2/code/keycloak
+            - name: WEB_POST_LOGOUT_URI
+              value: https://app.gotgan.live/
             # 프록시(ingress→nginx→backend) 뒤에서 redirect URI를 https://app.gotgan.live 로 생성
             - name: SERVER_FORWARD_HEADERS_STRATEGY
               value: framework
