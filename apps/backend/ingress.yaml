@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: backend
+  annotations:
+    cert-manager.io/cluster-issuer: gotgan-ca-issuer
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [api.gotgan.live]
+      secretName: api-ingress-tls
+  rules:
+    - host: api.gotgan.live
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port: { number: 8080 }

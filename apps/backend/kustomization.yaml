@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: gotgan
+resources:
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+images:
+  - name: harbor.gotgan.live/gotgan/backend
+    newTag: "latest"   # Jenkins CI가 git sha로 갱신

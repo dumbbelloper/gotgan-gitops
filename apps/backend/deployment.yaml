@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels: { app: backend }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: backend }
+  template:
+    metadata:
+      labels: { app: backend }
+    spec:
+      imagePullSecrets:
+        - name: harbor-pull
+      containers:
+        - name: backend
+          image: harbor.gotgan.live/gotgan/backend:latest
+          ports:
+            - { containerPort: 8080 }
+          env:
+            # --- DB (CNPG pg-app primary) ---
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://pg-app-rw.gotgan.svc.cluster.local:5432/gotgan
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom: { secretKeyRef: { name: pg-app-app, key: username } }
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom: { secretKeyRef: { name: pg-app-app, key: password } }
+            # --- OIDC: gotgan realm (프로덕션 override) ---
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+              value: https://auth.gotgan.live/realms/gotgan
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_ID
+              value: gotgan-web-bff
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET
+              valueFrom: { secretKeyRef: { name: gotgan-backend-oidc, key: web-bff-secret } }
+            - name: WEB_REDIRECT_URI
+              value: https://api.gotgan.live/login/oauth2/code/keycloak
+            # --- 모바일 resource-server JWT ---
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+              value: https://auth.gotgan.live/realms/gotgan
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 12
+          livenessProbe:
+            httpGet: { path: /actuator/health, port: 8080 }
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 6
+          resources:
+            requests: { cpu: 250m, memory: 768Mi }
+            limits:   { cpu: "1",  memory: 1536Mi }
