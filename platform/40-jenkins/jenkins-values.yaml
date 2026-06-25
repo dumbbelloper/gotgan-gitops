@@ -30,3 +30,22 @@ persistence:
   size: 10Gi
 agent:
   enabled: true               # Kubernetes cloud 동적 agent (Kaniko 빌드는 Jenkinsfile podTemplate로)
+
+# Keycloak(platform realm) SSO — 적용 시 __JENKINS_OIDC_SECRET__ 치환.
+# 주의: oic-auth 4.x는 escapeHatch를 JCasC 미지원 → 비상복구는 config.xml 백업으로.
+controllerJCasCNote: "아래 configScripts.oidc-realm 은 controller.JCasC.configScripts 하위로 병합"
+controller:
+  JCasC:
+    configScripts:
+      oidc-realm: |
+        jenkins:
+          securityRealm:
+            oic:
+              clientId: "jenkins"
+              clientSecret: "__JENKINS_OIDC_SECRET__"
+              serverConfiguration:
+                wellKnown:
+                  wellKnownOpenIDConfigurationUrl: "https://auth.gotgan.live/realms/platform/.well-known/openid-configuration"
+              userNameField: "preferred_username"
+              groupsFieldName: "groups"
+              postLogoutRedirectUrl: "https://jenkins.gotgan.live/"
