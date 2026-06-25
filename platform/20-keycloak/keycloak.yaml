@@ -6,6 +6,10 @@ metadata:
   namespace: keycloak
 spec:
   instances: 1
+  image: harbor.gotgan.live/gotgan/keycloak:26.5.0-gotgan1   # 곳간 로그인 테마 포함 커스텀 이미지
+  startOptimized: false   # --optimized 비활성 → 기동 시 auto-build(health/cache 등 런타임 옵션 반영)
+  imagePullSecrets:
+    - name: harbor-pull
   db:
     vendor: postgres
     host: pg-keycloak-rw.keycloak.svc.cluster.local
