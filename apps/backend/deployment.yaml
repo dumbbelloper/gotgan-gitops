@@ -54,3 +54,13 @@ spec:
           resources:
             requests: { cpu: 250m, memory: 768Mi }
             limits:   { cpu: "1",  memory: 1536Mi }
+          volumeMounts:
+            # 운영 시크릿(toss/telegram) — spring.config.import: optional:application-local.yml 로 로드
+            - name: app-secrets
+              mountPath: /app/application-local.yml
+              subPath: application-local.yml
+              readOnly: true
+      volumes:
+        - name: app-secrets
+          secret:
+            secretName: gotgan-backend-secrets
