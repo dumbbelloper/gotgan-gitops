@@ -34,7 +34,10 @@ spec:
             - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_KEYCLOAK_CLIENT_SECRET
               valueFrom: { secretKeyRef: { name: gotgan-backend-oidc, key: web-bff-secret } }
             - name: WEB_REDIRECT_URI
-              value: https://api.gotgan.live/login/oauth2/code/keycloak
+              value: https://app.gotgan.live/login/oauth2/code/keycloak
+            # 프록시(ingress→nginx→backend) 뒤에서 redirect URI를 https://app.gotgan.live 로 생성
+            - name: SERVER_FORWARD_HEADERS_STRATEGY
+              value: framework
             # --- 모바일 resource-server JWT ---
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: https://auth.gotgan.live/realms/gotgan
