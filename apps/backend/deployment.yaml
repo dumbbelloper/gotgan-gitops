@@ -19,6 +19,9 @@ spec:
           ports:
             - { containerPort: 8080 }
           env:
+            # 마운트된 운영 시크릿을 명시적 file: 경로로 import (bare name은 classpath로 해석되어 미적용)
+            - name: SPRING_CONFIG_IMPORT
+              value: optional:file:/app/application-local.yml
             # --- DB (CNPG pg-app primary) ---
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://pg-app-rw.gotgan.svc.cluster.local:5432/gotgan
