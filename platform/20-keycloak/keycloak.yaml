@@ -1,0 +1,52 @@
+# Keycloak (production) → pg-keycloak. TLS는 ingress(cert-manager)에서 종단, 내부는 HTTP + xforwarded.
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  instances: 1
+  db:
+    vendor: postgres
+    host: pg-keycloak-rw.keycloak.svc.cluster.local
+    port: 5432
+    database: keycloak
+    usernameSecret:
+      name: pg-keycloak-app
+      key: username
+    passwordSecret:
+      name: pg-keycloak-app
+      key: password
+  hostname:
+    hostname: https://auth.gotgan.live
+  http:
+    httpEnabled: true          # TLS는 ingress edge에서 종단
+  proxy:
+    headers: xforwarded
+  ingress:
+    enabled: false             # operator 기본 passthrough 대신 자체 nginx Ingress 사용
+---
+# auth.gotgan.live → keycloak-service:8080, cert-manager가 내부 CA로 TLS 자동 발급
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: keycloak
+  namespace: keycloak
+  annotations:
+    cert-manager.io/cluster-issuer: gotgan-ca-issuer
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [auth.gotgan.live]
+      secretName: keycloak-ingress-tls
+  rules:
+    - host: auth.gotgan.live
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: keycloak-service
+                port:
+                  number: 8080

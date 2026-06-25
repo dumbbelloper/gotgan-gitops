@@ -1,0 +1,4 @@
+# 비밀은 절대 커밋하지 않는다 — 클러스터에 직접 생성하거나 별도 시크릿 관리(추후 Sealed Secrets).
+*.env
+*-secret*.yaml
+tls/

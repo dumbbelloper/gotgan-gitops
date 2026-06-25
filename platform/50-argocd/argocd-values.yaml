@@ -1,0 +1,42 @@
+global:
+  domain: argocd.gotgan.live
+configs:
+  params:
+    server.insecure: true        # TLS는 ingress(cert-manager)에서 종단
+  cm:
+    url: https://argocd.gotgan.live
+    oidc.config: |
+      name: Keycloak
+      issuer: https://auth.gotgan.live/realms/platform
+      clientID: argocd
+      clientSecret: $oidc.keycloak.clientSecret
+      requestedScopes: ["openid", "profile", "email", "groups"]
+      requestedIDTokenClaims: {"groups": {"essential": true}}
+  rbac:
+    policy.default: role:readonly
+    scopes: '[groups]'
+    policy.csv: |
+      g, platform-admins, role:admin
+  secret:
+    extra:
+      oidc.keycloak.clientSecret: "__ARGOCD_OIDC_SECRET__"   # helm 적용 직전 치환
+server:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostname: argocd.gotgan.live
+    annotations:
+      cert-manager.io/cluster-issuer: gotgan-ca-issuer
+      nginx.ingress.kubernetes.io/backend-protocol: HTTP
+    tls: true                    # secretName 자동: argocd-server-tls (cert-manager가 채움)
+    extraTls:
+      - hosts: [argocd.gotgan.live]
+        secretName: argocd-ingress-tls
+redis-ha:
+  enabled: false
+controller:
+  replicas: 1
+repoServer:
+  replicas: 1
+applicationSet:
+  replicas: 1

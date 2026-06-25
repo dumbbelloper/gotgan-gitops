@@ -1,0 +1,92 @@
+# Nexus 3 — Maven(jar)/npm 아티팩트 저장소. (컨테이너 이미지는 Harbor 담당)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nexus
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nexus-data
+  namespace: nexus
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: nfs-client
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nexus
+  namespace: nexus
+spec:
+  replicas: 1
+  strategy: { type: Recreate }
+  selector:
+    matchLabels: { app: nexus }
+  template:
+    metadata:
+      labels: { app: nexus }
+    spec:
+      securityContext:
+        fsGroup: 200          # nexus3 이미지 uid/gid 200 — /nexus-data 쓰기권한
+      containers:
+        - name: nexus
+          image: sonatype/nexus3:3.68.0
+          ports:
+            - { containerPort: 8081, name: ui }
+          env:
+            - name: INSTALL4J_ADD_VM_PARAMS
+              value: "-Xms1024m -Xmx2048m -XX:MaxDirectMemorySize=2048m"
+          volumeMounts:
+            - { name: data, mountPath: /nexus-data }
+          readinessProbe:
+            httpGet: { path: /, port: 8081 }
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 20
+          resources:
+            requests: { cpu: "500m", memory: "2Gi" }
+            limits:   { cpu: "2",    memory: "4Gi" }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: nexus-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nexus
+  namespace: nexus
+spec:
+  selector: { app: nexus }
+  ports:
+    - { name: ui, port: 80, targetPort: 8081 }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nexus
+  namespace: nexus
+  annotations:
+    cert-manager.io/cluster-issuer: gotgan-ca-issuer
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [nexus.gotgan.live]
+      secretName: nexus-ingress-tls
+  rules:
+    - host: nexus.gotgan.live
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nexus
+                port: { number: 80 }

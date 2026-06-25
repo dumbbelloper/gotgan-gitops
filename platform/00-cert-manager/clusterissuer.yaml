@@ -1,0 +1,36 @@
+# 내부 TLS 발급 체인: selfsigned → CA 인증서 → CA ClusterIssuer
+# 공개 TLS는 Cloudflare edge에서 종단. 이 CA는 클러스터 내부(*.gotgan.live) 인증서 발급용.
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: gotgan-internal-ca
+  namespace: cert-manager
+spec:
+  isCA: true
+  commonName: gotgan.live internal CA
+  secretName: gotgan-internal-ca
+  duration: 87600h    # 10y
+  renewBefore: 720h
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  issuerRef:
+    name: selfsigned-issuer
+    kind: ClusterIssuer
+    group: cert-manager.io
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: gotgan-ca-issuer
+spec:
+  ca:
+    secretName: gotgan-internal-ca

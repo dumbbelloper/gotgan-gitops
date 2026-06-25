@@ -1,0 +1,27 @@
+expose:
+  type: ingress
+  tls:
+    enabled: true
+    certSource: secret
+    secret:
+      secretName: harbor-ingress-tls
+  ingress:
+    hosts:
+      core: harbor.gotgan.live
+    className: nginx
+    annotations:
+      cert-manager.io/cluster-issuer: gotgan-ca-issuer
+      ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+externalURL: https://harbor.gotgan.live
+harborAdminPassword: "__HARBOR_ADMIN_PASSWORD__"
+persistence:
+  enabled: true
+  persistentVolumeClaim:
+    registry:   {storageClass: nfs-client, size: 30Gi}
+    jobservice: {storageClass: nfs-client, size: 2Gi}
+    database:   {storageClass: nfs-client, size: 5Gi}
+    redis:      {storageClass: nfs-client, size: 2Gi}
+    trivy:      {storageClass: nfs-client, size: 5Gi}
+trivy:
+  enabled: true

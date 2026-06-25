@@ -1,0 +1,32 @@
+controller:
+  admin:
+    username: "admin"
+    password: "__JENKINS_ADMIN_PASSWORD__"
+  jenkinsUrl: "https://jenkins.gotgan.live"
+  jenkinsUrlProtocol: "https"
+  resources:
+    requests: { cpu: "500m", memory: "1Gi" }
+    limits:   { cpu: "2",    memory: "2Gi" }
+  installPlugins:
+    - kubernetes:latest
+    - workflow-aggregator:latest
+    - git:latest
+    - configuration-as-code:latest
+    - pipeline-stage-view:latest
+    - oic-auth:latest          # OIDC(Keycloak) 로그인 — DNS 개통 후 JCasC로 활성화
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hostName: jenkins.gotgan.live
+    annotations:
+      cert-manager.io/cluster-issuer: gotgan-ca-issuer
+    tls:
+      - hosts: [jenkins.gotgan.live]
+        secretName: jenkins-ingress-tls
+  serviceType: ClusterIP
+persistence:
+  enabled: true
+  storageClass: nfs-client
+  size: 10Gi
+agent:
+  enabled: true               # Kubernetes cloud 동적 agent (Kaniko 빌드는 Jenkinsfile podTemplate로)

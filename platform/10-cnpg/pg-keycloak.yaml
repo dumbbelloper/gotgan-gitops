@@ -1,0 +1,32 @@
+# Keycloak 전용 PostgreSQL (앱 DB와 완전 분리). primary + 1 replica.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keycloak
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: pg-keycloak
+  namespace: keycloak
+spec:
+  instances: 2                       # 1 primary + 1 streaming replica
+  imageName: ghcr.io/cloudnative-pg/postgresql:17
+  primaryUpdateStrategy: unsupervised
+  storage:
+    size: 10Gi
+    storageClass: nfs-client
+  monitoring:
+    enablePodMonitor: false          # Prometheus Operator 미설치 (추후)
+  resources:
+    requests: { cpu: 100m, memory: 256Mi }
+    limits:   { cpu: "1",  memory: 1Gi }
+  postgresql:
+    parameters:
+      wal_level: logical             # CDC/Debezium 대비 (Kafka 연동)
+      max_wal_senders: "10"
+      max_replication_slots: "10"
+  bootstrap:
+    initdb:
+      database: keycloak
+      owner: keycloak                # 앱 secret: pg-keycloak-app (user/pass/uri)

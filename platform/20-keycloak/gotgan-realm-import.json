@@ -1,0 +1,120 @@
+{
+  "apiVersion": "k8s.keycloak.org/v2alpha1",
+  "kind": "KeycloakRealmImport",
+  "metadata": {
+    "name": "gotgan-realm",
+    "namespace": "keycloak"
+  },
+  "spec": {
+    "keycloakCRName": "keycloak",
+    "realm": {
+      "realm": "gotgan",
+      "enabled": true,
+      "displayName": "곳간",
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "loginWithEmailAllowed": true,
+      "duplicateEmailsAllowed": false,
+      "resetPasswordAllowed": true,
+      "accessTokenLifespan": 300,
+      "ssoSessionIdleTimeout": 1800,
+      "ssoSessionMaxLifespan": 36000,
+      "revokeRefreshToken": true,
+      "refreshTokenMaxReuse": 0,
+      "roles": {
+        "realm": [
+          {
+            "name": "USER",
+            "description": "기본 사용자"
+          },
+          {
+            "name": "ADMIN",
+            "description": "관리자"
+          }
+        ]
+      },
+      "users": [
+        {
+          "username": "tester",
+          "enabled": true,
+          "emailVerified": true,
+          "email": "tester@gotgan.local",
+          "firstName": "Test",
+          "lastName": "User",
+          "credentials": [
+            {
+              "type": "password",
+              "value": "__USER_PASSWORD__",
+              "temporary": false
+            }
+          ],
+          "realmRoles": [
+            "USER"
+          ]
+        }
+      ],
+      "clients": [
+        {
+          "clientId": "gotgan-web-bff",
+          "name": "Toss Web BFF (confidential)",
+          "description": "웹 SPA용 BFF. 백엔드(Spring)가 secret 보유, code flow 중개.",
+          "enabled": true,
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "secret": "__CLIENT_SECRET__",
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "serviceAccountsEnabled": false,
+          "redirectUris": [
+            "https://api.gotgan.live/login/oauth2/code/keycloak",
+            "http://localhost:8080/login/oauth2/code/keycloak",
+            "http://localhost:5173/login/oauth2/code/keycloak"
+          ],
+          "webOrigins": [
+            "https://app.gotgan.live",
+            "http://localhost:5173"
+          ],
+          "attributes": {
+            "pkce.code.challenge.method": "S256",
+            "post.logout.redirect.uris": "https://app.gotgan.live/*##http://localhost:5173/*"
+          },
+          "protocolMappers": [
+            {
+              "name": "realm roles (id+userinfo)",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-usermodel-realm-role-mapper",
+              "consentRequired": false,
+              "config": {
+                "claim.name": "realm_access.roles",
+                "jsonType.label": "String",
+                "multivalued": "true",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        },
+        {
+          "clientId": "gotgan-mobile",
+          "name": "Toss Mobile (React Native, public, PKCE)",
+          "description": "React Native(iOS·Android 통합). secret 없음, Authorization Code + PKCE. react-native-app-auth.",
+          "enabled": true,
+          "protocol": "openid-connect",
+          "publicClient": true,
+          "standardFlowEnabled": true,
+          "implicitFlowEnabled": false,
+          "directAccessGrantsEnabled": false,
+          "redirectUris": [
+            "com.toss.app://oauth2redirect"
+          ],
+          "attributes": {
+            "pkce.code.challenge.method": "S256",
+            "post.logout.redirect.uris": "com.toss.app://oauth2redirect"
+          }
+        }
+      ]
+    }
+  }
+}

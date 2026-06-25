@@ -1,0 +1,174 @@
+{
+  "apiVersion": "k8s.keycloak.org/v2alpha1",
+  "kind": "KeycloakRealmImport",
+  "metadata": {
+    "name": "platform-realm",
+    "namespace": "keycloak"
+  },
+  "spec": {
+    "keycloakCRName": "keycloak",
+    "realm": {
+      "realm": "platform",
+      "enabled": true,
+      "displayName": "Gotgan Platform (ops)",
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "loginWithEmailAllowed": true,
+      "roles": {
+        "realm": [
+          {
+            "name": "platform-admin",
+            "description": "플랫폼 운영자"
+          }
+        ]
+      },
+      "groups": [
+        {
+          "name": "platform-admins",
+          "realmRoles": [
+            "platform-admin"
+          ]
+        }
+      ],
+      "users": [
+        {
+          "username": "opsadmin",
+          "enabled": true,
+          "emailVerified": true,
+          "email": "opsadmin@gotgan.live",
+          "firstName": "Ops",
+          "lastName": "Admin",
+          "credentials": [
+            {
+              "type": "password",
+              "value": "__USER_PASSWORD__",
+              "temporary": true
+            }
+          ],
+          "realmRoles": [
+            "platform-admin"
+          ],
+          "groups": [
+            "/platform-admins"
+          ]
+        }
+      ],
+      "clients": [
+        {
+          "clientId": "argocd",
+          "enabled": true,
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "secret": "__CLIENT_SECRET__",
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": false,
+          "redirectUris": [
+            "https://argocd.gotgan.live/auth/callback"
+          ],
+          "webOrigins": [
+            "https://argocd.gotgan.live"
+          ],
+          "attributes": {
+            "pkce.code.challenge.method": "S256"
+          },
+          "defaultClientScopes": [
+            "openid",
+            "profile",
+            "email",
+            "roles"
+          ],
+          "protocolMappers": [
+            {
+              "name": "groups",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-group-membership-mapper",
+              "config": {
+                "claim.name": "groups",
+                "full.path": "false",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        },
+        {
+          "clientId": "harbor",
+          "enabled": true,
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "secret": "__CLIENT_SECRET__",
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": false,
+          "redirectUris": [
+            "https://harbor.gotgan.live/c/oidc/callback"
+          ],
+          "webOrigins": [
+            "https://harbor.gotgan.live"
+          ],
+          "attributes": {
+            "pkce.code.challenge.method": "S256"
+          },
+          "defaultClientScopes": [
+            "openid",
+            "profile",
+            "email",
+            "roles"
+          ],
+          "protocolMappers": [
+            {
+              "name": "groups",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-group-membership-mapper",
+              "config": {
+                "claim.name": "groups",
+                "full.path": "false",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        },
+        {
+          "clientId": "jenkins",
+          "enabled": true,
+          "protocol": "openid-connect",
+          "publicClient": false,
+          "secret": "__CLIENT_SECRET__",
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": false,
+          "redirectUris": [
+            "https://jenkins.gotgan.live/securityRealm/finishLogin"
+          ],
+          "webOrigins": [
+            "https://jenkins.gotgan.live"
+          ],
+          "attributes": {
+            "pkce.code.challenge.method": "S256"
+          },
+          "defaultClientScopes": [
+            "openid",
+            "profile",
+            "email",
+            "roles"
+          ],
+          "protocolMappers": [
+            {
+              "name": "groups",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-group-membership-mapper",
+              "config": {
+                "claim.name": "groups",
+                "full.path": "false",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

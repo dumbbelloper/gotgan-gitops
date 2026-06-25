@@ -1,0 +1,134 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+
+/* 곳간 로그인 — 커스텀 standalone(login.ftl). 방향 A(따뜻함). 토큰: docs/design/DESIGN.md */
+
+:root {
+  --bg: #faf7f1;
+  --surface: #ffffff;
+  --ink: #2a2521;
+  --muted: #8a8175;
+  --line: #eae4da;
+  --accent: #b5703c;
+  --accent-hover: #9e6033;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Pretendard', system-ui, -apple-system, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.page {
+  width: 100%;
+  max-width: 400px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 36px 32px;
+  box-shadow: 0 10px 34px rgba(42, 37, 33, 0.07);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-name {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.tagline {
+  margin: 8px 0 28px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 16px 0 6px;
+}
+
+.form input {
+  height: 48px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.form input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(181, 112, 60, 0.16);
+}
+
+.submit {
+  margin-top: 26px;
+  height: 50px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.submit:hover {
+  background: var(--accent-hover);
+}
+
+.alert {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.alert-error {
+  background: #fdecec;
+  color: #b42318;
+  border: 1px solid #f7c9c5;
+}
+
+.alert-warning,
+.alert-info {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.alert-success {
+  background: #ecfdf3;
+  color: #067647;
+  border: 1px solid #bbf7d0;
+}
