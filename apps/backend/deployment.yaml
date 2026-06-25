@@ -18,10 +18,14 @@ spec:
           image: harbor.gotgan.live/gotgan/backend:latest
           ports:
             - { containerPort: 8080 }
+          envFrom:
+            # 운영 시크릿(TOSS_CLIENT_ID/SECRET, TELEGRAM_BOT_TOKEN/CHAT_ID) — git 미커밋
+            - secretRef:
+                name: gotgan-backend-secrets
           env:
-            # 마운트된 운영 시크릿을 명시적 file: 경로로 import (bare name은 classpath로 해석되어 미적용)
-            - name: SPRING_CONFIG_IMPORT
-              value: optional:file:/app/application-local.yml
+            # 운영 프로파일 활성화 → application-live.yml(jar 내장)이 ${ENV} 시크릿을 바인딩
+            - name: SPRING_PROFILES_ACTIVE
+              value: live
             # --- DB (CNPG pg-app primary) ---
             - name: SPRING_DATASOURCE_URL
               value: jdbc:postgresql://pg-app-rw.gotgan.svc.cluster.local:5432/gotgan
@@ -57,13 +61,3 @@ spec:
           resources:
             requests: { cpu: 250m, memory: 768Mi }
             limits:   { cpu: "1",  memory: 1536Mi }
-          volumeMounts:
-            # 운영 시크릿(toss/telegram) — spring.config.import: optional:application-local.yml 로 로드
-            - name: app-secrets
-              mountPath: /app/application-local.yml
-              subPath: application-local.yml
-              readOnly: true
-      volumes:
-        - name: app-secrets
-          secret:
-            secretName: gotgan-backend-secrets
