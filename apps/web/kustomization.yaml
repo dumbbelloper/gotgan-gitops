@@ -7,4 +7,4 @@ resources:
   - ingress.yaml
 images:
   - name: harbor.gotgan.live/gotgan/web
-    newTag: "latest"   # Jenkins CI가 git sha로 갱신
+    newTag: "ef5ad71d"
