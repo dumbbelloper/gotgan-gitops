@@ -13,7 +13,7 @@ controller:
     - git:latest
     - configuration-as-code:latest
     - pipeline-stage-view:latest
-    - oic-auth:latest          # OIDC(Keycloak) 로그인 — DNS 개통 후 JCasC로 활성화
+    - oic-auth:latest
   ingress:
     enabled: true
     ingressClassName: nginx
@@ -24,17 +24,8 @@ controller:
       - hosts: [jenkins.gotgan.live]
         secretName: jenkins-ingress-tls
   serviceType: ClusterIP
-persistence:
-  enabled: true
-  storageClass: nfs-client
-  size: 10Gi
-agent:
-  enabled: true               # Kubernetes cloud 동적 agent (Kaniko 빌드는 Jenkinsfile podTemplate로)
-
-# Keycloak(platform realm) SSO — 적용 시 __JENKINS_OIDC_SECRET__ 치환.
-# 주의: oic-auth 4.x는 escapeHatch를 JCasC 미지원 → 비상복구는 config.xml 백업으로.
-controllerJCasCNote: "아래 configScripts.oidc-realm 은 controller.JCasC.configScripts 하위로 병합"
-controller:
+  # Keycloak(platform realm) SSO. 적용 시 __JENKINS_OIDC_SECRET__ 치환.
+  # 주의: oic-auth 4.x는 escapeHatch를 JCasC 미지원 → 비상복구는 config.xml 백업으로.
   JCasC:
     configScripts:
       oidc-realm: |
@@ -49,3 +40,9 @@ controller:
               userNameField: "preferred_username"
               groupsFieldName: "groups"
               postLogoutRedirectUrl: "https://jenkins.gotgan.live/"
+persistence:
+  enabled: true
+  storageClass: nfs-client
+  size: 10Gi
+agent:
+  enabled: true               # Kubernetes cloud 동적 agent (Kaniko 빌드는 Jenkinsfile podTemplate로)
