@@ -1,0 +1,21 @@
+# 곳간 세션 스토어 RedisFailover 인스턴스 + NetworkPolicy. sync-wave 1 = operator(CRD) 이후.
+# 전제: redis 네임스페이스에 인증 Secret 'gotgan-session-redis-auth'(key: password)를 별도 생성(평문이라 git 미포함).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gotgan-redis
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dumbbelloper/gotgan-gitops.git
+    targetRevision: main
+    path: apps/redis
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: redis
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]

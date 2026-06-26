@@ -1,0 +1,21 @@
+# Spotahome redis-operator (v1.2.4 고정). sync-wave 0 = redis 인스턴스보다 먼저(CRD 선설치).
+# 대용량 CRD는 ServerSideApply로 적용(client-side annotation 262144B 한도 회피).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis-operator
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/dumbbelloper/gotgan-gitops.git
+    targetRevision: main
+    path: apps/redis-operator
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: redis-operator
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true, ServerSideApply=true]
