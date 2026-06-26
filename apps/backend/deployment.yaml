@@ -60,6 +60,14 @@ spec:
             # 홈랩에 IPv6 egress 없음 + Cloudflare가 A/AAAA 동시 반환 → JVM IPv4 강제(잔여 외부호출 방어)
             - name: JAVA_TOOL_OPTIONS
               value: "-Djava.net.preferIPv4Stack=true"
+            # --- 세션 스토어(Redis Sentinel HA, apps/redis) 접속 — application-live.yml 의 ${...} 주입 ---
+            # endpoint/port 는 SPRING_DATASOURCE_URL 과 동일 원칙으로 여기(배포시 env)에 둔다.
+            - name: REDIS_SENTINEL_MASTER
+              value: mymaster
+            - name: REDIS_SENTINEL_NODES
+              value: rfs-gotgan-session.redis.svc.cluster.local:26379
+            - name: REDIS_PASSWORD
+              valueFrom: { secretKeyRef: { name: gotgan-session-redis-auth, key: password } }
           readinessProbe:
             httpGet: { path: /actuator/health, port: 8080 }
             initialDelaySeconds: 30
