@@ -50,6 +50,16 @@ spec:
             # --- 모바일 resource-server JWT ---
             - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
               value: https://auth.gotgan.live/realms/gotgan
+            # JWKS(서명키) 조회는 Cloudflare(외부) 경유 시 지연으로 Spring의 짧은 read-timeout을
+            # 초과해 [invalid_id_token] certs Read timed out → 로그인 실패. iss 검증/디스커버리/
+            # authorization-uri는 public issuer 그대로 두고, 키 조회만 클러스터 내부 Keycloak으로.
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_JWK_SET_URI
+              value: http://keycloak-service.keycloak.svc.cluster.local:8080/realms/gotgan/protocol/openid-connect/certs
+            - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_JWK_SET_URI
+              value: http://keycloak-service.keycloak.svc.cluster.local:8080/realms/gotgan/protocol/openid-connect/certs
+            # 홈랩에 IPv6 egress 없음 + Cloudflare가 A/AAAA 동시 반환 → JVM IPv4 강제(잔여 외부호출 방어)
+            - name: JAVA_TOOL_OPTIONS
+              value: "-Djava.net.preferIPv4Stack=true"
           readinessProbe:
             httpGet: { path: /actuator/health, port: 8080 }
             initialDelaySeconds: 30
