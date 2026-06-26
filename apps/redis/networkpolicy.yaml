@@ -1,0 +1,26 @@
+# 세션 스토어 접근 제한(best practice): redis(6379)/sentinel(26379)는
+#  - 같은 redis 네임스페이스(복제·sentinel↔redis·sentinel↔sentinel),
+#  - redis-operator(재조정/헬스체크),
+#  - gotgan(backend BFF 클라이언트)
+# 에서만 ingress 허용. 그 외 차단. egress는 기본 허용.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-failover-access
+  namespace: redis
+spec:
+  podSelector:
+    matchLabels:
+      redisfailovers.databases.spotahome.com/name: gotgan-session
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: redis }
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: redis-operator }
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: gotgan }
+      ports:
+        - { protocol: TCP, port: 6379 }
+        - { protocol: TCP, port: 26379 }

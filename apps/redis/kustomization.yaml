@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: redis
+# 인증 Secret(gotgan-session-redis-auth)은 평문이라 git 미포함 — 클러스터에 별도 생성(곳간 시크릿 관례).
+#   kubectl -n redis create secret generic gotgan-session-redis-auth --from-literal=password=<강한값>
+resources:
+  - redisfailover.yaml
+  - networkpolicy.yaml

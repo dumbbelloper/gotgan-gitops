@@ -1,0 +1,67 @@
+# 곳간 세션 스토어 — Redis OSS 8.2.1 (AGPL 재오픈판) Sentinel HA.
+# backend BFF의 Spring Session 저장소. primary 1 + replica 2 + sentinel 3 (자동 failover).
+apiVersion: databases.spotahome.com/v1
+kind: RedisFailover
+metadata:
+  name: gotgan-session
+  namespace: redis
+spec:
+  redis:
+    replicas: 3                       # primary 1 + replica 2 (sentinel이 승격)
+    image: redis:8.2.1                # Redis OSS 8.x (AGPLv3), 패치버전 고정
+    port: 6379
+    resources:
+      # 메모리 requests=limits → Guaranteed에 준하는 OOMKill 방지(데이터 안정). limit은 maxmemory의 2×
+      # (RDB BGSAVE fork CoW + 복제/클라이언트 버퍼 + 단편화 헤드룸). CPU는 버스트 허용.
+      requests: { cpu: 100m, memory: 2Gi }
+      limits:   { cpu: "1",  memory: 2Gi }
+    customConfig:                     # ★ 세션 스토어 전용 튜닝
+      - "maxmemory 1gb"               # 데이터 상한 1GB (limit 2Gi의 절반=권장 헤드룸)
+      - "maxmemory-policy noeviction" # 활성 세션 evict 금지(메모리 압박 시 로그아웃 방지)
+      # 영속성: 기본 RDB 스냅샷 유지(재시작 내성). AOF는 미사용 —
+      #  ① NFS에 AOF(fsync everysec)는 신뢰성/성능상 비권장,
+      #  ② operator v1.2.4의 'CONFIG SET appendonly yes'가 Redis 8.x에서 실패해 재조정을 막음.
+      # 가용성은 Sentinel + replica 2(3노드 분산)로 확보. 단일 노드/파드 장애는 무중단 failover.
+      # (블록스토리지 도입 시 AOF 재활성 권장 — 후속 하드닝.)
+    storage:
+      keepAfterDeletion: true         # 실수로 CR 삭제해도 PVC(세션) 보존
+      persistentVolumeClaim:
+        metadata:
+          name: redisfailover-data
+        spec:
+          accessModes: [ReadWriteOnce]
+          storageClassName: nfs-client
+          resources:
+            requests:
+              storage: 1Gi
+    # 비루트 실행(best practice). operator의 config-copy init이 uid=1000으로 설정 파일을 생성하므로
+    # 본체도 1000으로 맞춰야 함(불일치 시 sentinel이 자기 config 재작성 불가). fsGroup도 1000.
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      capabilities:
+        drop: ["ALL"]
+  sentinel:
+    replicas: 3                       # 홀수 쿼럼
+    image: redis:8.2.1
+    resources:
+      requests: { cpu: 25m, memory: 64Mi }
+      limits:   { cpu: 100m, memory: 128Mi }
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      fsGroup: 1000
+    containerSecurityContext:
+      allowPrivilegeEscalation: false
+      runAsNonRoot: true
+      capabilities:
+        drop: ["ALL"]
+  # requirepass/ACL 비밀번호 (Secret key: password). 클러스터 외 노출 방지의 1차 방어.
+  auth:
+    secretPath: gotgan-session-redis-auth
