@@ -7,4 +7,4 @@ resources:
   - ingress.yaml
 images:
   - name: harbor.gotgan.live/gotgan/backend
-    newTag: "3b3b3116"
+    newTag: "121f6393"
